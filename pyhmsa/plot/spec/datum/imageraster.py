@@ -13,6 +13,7 @@ from pyhmsa.type.numerical import convert_unit
 # Local modules.
 from pyhmsa.plot.spec.datum.datum import _DatumPlot
 from pyhmsa.plot.util.scalebar import ScaleBar
+from pyhmsa.plot.util.colorbar import ColorBar
 
 # Globals and constants variables.
 
@@ -73,6 +74,9 @@ class ImageRaster2DPlot(_DatumPlot):
             self._scalebar = self._create_scalebar(acq)
             self._ax.add_artist(self._scalebar)
 
+        self._colorbar = ColorBar(self._aximage)
+        self._ax.add_artist(self._colorbar)
+
         return fig
 
     def _create_colorbar(self, fig, ax, aximage):
@@ -97,4 +101,8 @@ class ImageRaster2DPlot(_DatumPlot):
         if self._scalebar is None:
             raise RuntimeError('No scale bar')
         return self._scalebar
+
+    @property
+    def colorbar(self):
+        return self._colorbar
 
