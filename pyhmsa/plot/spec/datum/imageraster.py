@@ -74,13 +74,13 @@ class ImageRaster2DPlot(_DatumPlot):
             self._scalebar = self._create_scalebar(acq)
             self._ax.add_artist(self._scalebar)
 
-        self._colorbar = ColorBar(self._aximage)
+        self._colorbar = self._create_colorbar(fig, self._ax, self._aximage)
         self._ax.add_artist(self._colorbar)
 
         return fig
 
     def _create_colorbar(self, fig, ax, aximage):
-        return fig.colorbar(aximage, ax=ax, shrink=0.8)
+        return ColorBar(aximage)
 
     def _create_scalebar(self, acq):
         return ScaleBar(1) # 1 because already calibrated by extent
