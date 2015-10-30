@@ -3,12 +3,18 @@ Add scale bar to matplotlib's image
 """
 
 # Standard library modules.
+import sys
 import bisect
 from operator import itemgetter
+import imp
 
 # Third party modules.
 from matplotlib.artist import Artist
 from matplotlib.cbook import is_string_like
+from matplotlib.font_manager import FontProperties
+from matplotlib.rcsetup import \
+    (defaultParams, validate_float, validate_legend_loc, validate_bool,
+     validate_color)
 
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredSizeBar
 
@@ -16,6 +22,24 @@ from mpl_toolkits.axes_grid.anchored_artists import AnchoredSizeBar
 from pyhmsa.type.unit import _PREFIXES_VALUES
 
 # Globals and constants variables.
+
+# Setup of extra parameters in the matplotlic rc
+defaultParams.update(
+    {'scalebar.length_fraction': [0.2, validate_float],
+     'scalebar.height_fraction': [0.01, validate_float],
+     'scalebar.location': ['upper right', validate_legend_loc],
+     'scalebar.pad': [0.2, validate_float],
+     'scalebar.border_pad': [0.1, validate_float],
+     'scalebar.sep': [5, validate_float],
+     'scalebar.frameon': [True, validate_bool],
+     'scalebar.color': ['k', validate_color],
+     'scalebar.box_color': ['w', validate_color],
+     'scalebar.box_alpha': [1.0, validate_float],
+     'scalebar.label_top': [False, validate_bool],
+     })
+
+# Reload matplotlib to reset the default parameters
+imp.reload(sys.modules['matplotlib'])
 
 class ScaleBar(Artist):
 
@@ -35,30 +59,38 @@ class ScaleBar(Artist):
                   'center':       10,
               }
 
-    def __init__(self, dx_m, length_fraction=0.2, height_fraction=0.01,
-                 location=1, pad=0.2, border_pad=0.1, sep=5, frameon=True,
-                 color='b', box_color='w', box_alpha=1.0,
-                 label_top=False, font_properties=None,
-                 **kwargs):
+    def __init__(self, dx_m, length_fraction=None, height_fraction=None,
+                 location=None, pad=None, border_pad=None, sep=None,
+                 frameon=None, color=None, box_color=None, box_alpha=None,
+                 label_top=None, font_properties=None):
         """
         Creates a new scale bar.
         
         :arg dx_m: dimension of one pixel in meters (m)
         :arg length_fraction: length of the scale bar as a fraction of the 
-            axes's width
+            axes's width (default: rcParams['scalebar.lenght_fraction'] or ``0.2``)
         :arg height_fraction: height of the scale bar as a fraction of the 
-            axes's height
+            axes's height (default: rcParams['scalebar.height_fraction'] or ``0.01``)
         :arg location: a location code (same as legend)
-        :arg pad: fraction of the legend font size
-        :arg border_pad : fraction of the legend font size
+            (default: rcParams['scalebar.location'] or ``upper right``)
+        :arg pad: fraction of the font size
+            (default: rcParams['scalebar.pad'] or ``0.2``)
+        :arg border_pad : fraction of the font size
+            (default: rcParams['scalebar.border_pad'] or ``0.1``)
         :arg sep : separation between scale bar and label in points
-        :arg frameon : if True, will draw a box around the horizontal bar and label
-        :arg color : color for the size bar and label
+            (default: rcParams['scalebar.sep'] or ``5``)
+        :arg frameon : if True, will draw a box around the scale bar 
+            and label (default: rcParams['scalebar.frameon'] or ``True``)
+        :arg color : color for the scale bar and label
+            (default: rcParams['scalebar.color'] or ``k``)
         :arg box_color: color of the box (if *frameon*)
+            (default: rcParams['scalebar.box_color'] or ``w``)
         :arg box_alpha: transparency of box
-        :arg label_top : if True, the label will be over the rectangle
-        :arg font_properties: a matplotlib.font_manager.FontProperties instance, optional
-            sets the font properties for the label text
+            (default: rcParams['scalebar.box_alpha'] or ``1.0``)
+        :arg label_top : if True, the label will be over the scale bar
+            (default: rcParams['scalebar.label_top'] or ``False``)
+        :arg font_properties: a matplotlib.font_manager.FontProperties instance, 
+            optional sets the font properties for the label text
         """
         Artist.__init__(self)
 
@@ -74,8 +106,7 @@ class ScaleBar(Artist):
         self.box_color = box_color
         self.box_alpha = box_alpha
         self.label_top = label_top
-        self.font_properties = font_properties
-        self._kwargs = kwargs
+        self.font_properties = FontProperties(font_properties)
 
     def _calculate_length(self, length_px):
         length_m = length_px * self._dx_m
@@ -101,31 +132,52 @@ class ScaleBar(Artist):
         if not self.get_visible():
             return
 
+        # Get parameters
+        from matplotlib import rcParams # late import
+
+        length_fraction = self.length_fraction or \
+            rcParams.get('scalebar.length_fraction', 0.2)
+        height_fraction = self.height_fraction or \
+            rcParams.get('scalebar.height_fraction', 0.01)
+        location = self.location or \
+            self._LOCATIONS[rcParams.get('scalebar.location', 'upper right')]
+        pad = self.pad or rcParams.get('scalebar.pad', 0.2)
+        border_pad = self.border_pad or \
+            rcParams.get('scalebar.border_pad', 0.1)
+        sep = self.sep or rcParams.get('scalebar.sep', 5)
+        frameon = self.frameon or rcParams.get('scalebar.frameon', True)
+        color = self.color or rcParams.get('scalebar.color', 'k')
+        box_color = self.box_color or rcParams.get('scalebar.box_color', 'w')
+        box_alpha = self.box_alpha or rcParams.get('scalebar.box_alpha', 1.0)
+        label_top = self.label_top or rcParams.get('scalebar.label_top', False)
+        font_properties = self.font_properties
+
         ax = self.get_axes()
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
 
-        length_px = abs(xlim[1] - xlim[0]) * self.length_fraction
+        # Calculate dimensions
+        length_px = abs(xlim[1] - xlim[0]) * length_fraction
         length_px, label = self._calculate_length(length_px)
 
-        size_vertical = abs(ylim[1] - ylim[0]) * self.height_fraction
+        size_vertical = abs(ylim[1] - ylim[0]) * height_fraction
 
+        # Create sizebar
         sizebar = AnchoredSizeBar(transform=ax.transData,
                                   size=length_px,
                                   label=label,
-                                  loc=self.location,
-                                  pad=self.pad,
-                                  borderpad=self.border_pad,
-                                  sep=self.sep,
-                                  frameon=self.frameon,
+                                  loc=location,
+                                  pad=pad,
+                                  borderpad=border_pad,
+                                  sep=sep,
+                                  frameon=frameon,
                                   size_vertical=size_vertical,
-                                  color=self.color,
-                                  label_top=self.label_top,
-                                  fontproperties=self.font_properties,
-                                  **self._kwargs)
+                                  color=color,
+                                  label_top=label_top,
+                                  fontproperties=font_properties)
         sizebar.set_axes(ax)
         sizebar.set_figure(self.get_figure())
-        sizebar.patch.set_color(self.box_color)
-        sizebar.patch.set_alpha(self.box_alpha)
+        sizebar.patch.set_color(box_color)
+        sizebar.patch.set_alpha(box_alpha)
         sizebar.draw(renderer)
 
     @property
@@ -142,8 +194,11 @@ class ScaleBar(Artist):
 
     @length_fraction.setter
     def length_fraction(self, fraction):
-        assert 0.0 <= fraction <= 1.0
-        self._length_fraction = float(fraction)
+        if fraction is not None:
+            fraction = float(fraction)
+            if fraction < 0.0 or fraction > 1.0:
+                raise ValueError('Length fraction must be between [0.0, 1.0]')
+        self._length_fraction = fraction
 
     @property
     def height_fraction(self):
@@ -151,8 +206,11 @@ class ScaleBar(Artist):
 
     @height_fraction.setter
     def height_fraction(self, fraction):
-        assert 0.0 <= fraction <= 1.0
-        self._height_fraction = float(fraction)
+        if fraction is not None:
+            fraction = float(fraction)
+            if fraction < 0.0 or fraction > 1.0:
+                raise ValueError('Height fraction must be between [0.0, 1.0]')
+        self._height_fraction = fraction
 
     @property
     def location(self):
@@ -172,7 +230,7 @@ class ScaleBar(Artist):
 
     @pad.setter
     def pad(self, pad):
-        self._pad = float(pad)
+        self._pad = pad
 
     @property
     def border_pad(self):
@@ -180,7 +238,7 @@ class ScaleBar(Artist):
 
     @border_pad.setter
     def border_pad(self, pad):
-        self._border_pad = float(pad)
+        self._border_pad = pad
 
     @property
     def sep(self):
@@ -188,7 +246,7 @@ class ScaleBar(Artist):
 
     @sep.setter
     def sep(self, sep):
-        self._sep = float(sep)
+        self._sep = sep
 
     @property
     def frameon(self):
@@ -196,7 +254,7 @@ class ScaleBar(Artist):
 
     @frameon.setter
     def frameon(self, on):
-        self._frameon = bool(on)
+        self._frameon = on
 
     @property
     def color(self):
@@ -220,7 +278,10 @@ class ScaleBar(Artist):
 
     @box_alpha.setter
     def box_alpha(self, alpha):
-        assert 0.0 <= alpha <= 1.0
+        if alpha is not None:
+            alpha = float(alpha)
+            if alpha < 0.0 or alpha > 1.0:
+                raise ValueError('Alpha must be between [0.0, 1.0]')
         self._box_alpha = alpha
 
     @property
@@ -229,7 +290,7 @@ class ScaleBar(Artist):
 
     @label_top.setter
     def label_top(self, top):
-        self._label_top = bool(top)
+        self._label_top = top
 
     @property
     def font_properties(self):
