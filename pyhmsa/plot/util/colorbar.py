@@ -1,5 +1,5 @@
 """
-Add scale bar to matplotlib's image 
+Add color bar to matplotlib's image 
 """
 
 # Standard library modules.
