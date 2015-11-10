@@ -66,7 +66,7 @@ class ColorBar(Artist):
                   'center':       10,
               }
 
-    def __init__(self, mappable, label=None, orientation=None, nbins=None,
+    def __init__(self, mappable=None, label=None, orientation=None, nbins=None,
                  length_fraction=None, width_fraction=None,
                  location=None, pad=None, border_pad=None, sep=None,
                  frameon=None, color=None, box_color=None, box_alpha=None,
@@ -74,8 +74,11 @@ class ColorBar(Artist):
         """
         Creates a new color bar.
         
-        :arg mappable: scalar mappable object
+        :arg mappable: scalar mappable object which implements the methods: 
+            :meth:`get_cmap` and :meth:`get_array`
+            (default: ``None``, the mappable can be specified later)
         :arg label: label on top of the color bar
+            (default: ``None``, no label is shown)
         :arg orientation: orientation, ``vertical`` or ``horizontal``
             (default: rcParams['colorbar.orientation'] or ``vertical``)
         :arg nbins: number of color division in the color bar
@@ -145,6 +148,8 @@ class ColorBar(Artist):
 
     def draw(self, renderer, *args, **kwargs):
         if not self.get_visible():
+            return
+        if not self.get_mappable():
             return
 
         # Get parameters
