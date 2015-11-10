@@ -180,123 +180,122 @@ class ScaleBar(Artist):
         sizebar.patch.set_alpha(box_alpha)
         sizebar.draw(renderer)
 
-    @property
-    def dx_m(self):
+    def get_dx_m(self):
         return self._dx_m
 
-    @dx_m.setter
-    def dx_m(self, dx_m):
+    def set_dx_m(self, dx_m):
         self._dx_m = float(dx_m)
 
-    @property
-    def length_fraction(self):
+    dx_m = property(get_dx_m, set_dx_m)
+
+    def get_length_fraction(self):
         return self._length_fraction
 
-    @length_fraction.setter
-    def length_fraction(self, fraction):
+    def set_length_fraction(self, fraction):
         if fraction is not None:
             fraction = float(fraction)
             if fraction < 0.0 or fraction > 1.0:
                 raise ValueError('Length fraction must be between [0.0, 1.0]')
         self._length_fraction = fraction
 
-    @property
-    def height_fraction(self):
+    length_fraction = property(get_length_fraction, set_length_fraction)
+
+    def get_height_fraction(self):
         return self._height_fraction
 
-    @height_fraction.setter
-    def height_fraction(self, fraction):
+    def set_height_fraction(self, fraction):
         if fraction is not None:
             fraction = float(fraction)
             if fraction < 0.0 or fraction > 1.0:
                 raise ValueError('Height fraction must be between [0.0, 1.0]')
         self._height_fraction = fraction
 
-    @property
-    def location(self):
+    height_fraction = property(get_height_fraction, set_height_fraction)
+
+    def get_location(self):
         return self._location
 
-    @location.setter
-    def location(self, loc):
+    def set_location(self, loc):
         if is_string_like(loc):
             if loc not in self._LOCATIONS:
                 raise ValueError('Unknown location code: %s' % loc)
             loc = self._LOCATIONS[loc]
         self._location = loc
 
-    @property
-    def pad(self):
+    location = property(get_location, set_location)
+
+    def get_pad(self):
         return self._pad
 
-    @pad.setter
-    def pad(self, pad):
+    def set_pad(self, pad):
         self._pad = pad
 
-    @property
-    def border_pad(self):
+    pad = property(get_pad, set_pad)
+
+    def get_border_pad(self):
         return self._border_pad
 
-    @border_pad.setter
-    def border_pad(self, pad):
+    def set_border_pad(self, pad):
         self._border_pad = pad
 
-    @property
-    def sep(self):
+    border_pad = property(get_border_pad, set_border_pad)
+
+    def get_sep(self):
         return self._sep
 
-    @sep.setter
-    def sep(self, sep):
+    def set_sep(self, sep):
         self._sep = sep
 
-    @property
-    def frameon(self):
+    sep = property(get_sep, set_sep)
+
+    def get_frameon(self):
         return self._frameon
 
-    @frameon.setter
-    def frameon(self, on):
+    def set_frameon(self, on):
         self._frameon = on
 
-    @property
-    def color(self):
+    frameon = property(get_frameon, set_frameon)
+
+    def get_color(self):
         return self._color
 
-    @color.setter
-    def color(self, color):
+    def set_color(self, color):
         self._color = color
 
-    @property
-    def box_color(self):
+    color = property(get_color, set_color)
+
+    def get_box_color(self):
         return self._box_color
 
-    @box_color.setter
-    def box_color(self, color):
+    def set_box_color(self, color):
         self._box_color = color
 
-    @property
-    def box_alpha(self):
+    box_color = property(get_box_color, set_box_color)
+
+    def get_box_alpha(self):
         return self._box_alpha
 
-    @box_alpha.setter
-    def box_alpha(self, alpha):
+    def set_box_alpha(self, alpha):
         if alpha is not None:
             alpha = float(alpha)
             if alpha < 0.0 or alpha > 1.0:
                 raise ValueError('Alpha must be between [0.0, 1.0]')
         self._box_alpha = alpha
 
-    @property
-    def label_top(self):
+    box_alpha = property(get_box_alpha, set_box_alpha)
+
+    def get_label_top(self):
         return self._label_top
 
-    @label_top.setter
-    def label_top(self, top):
+    def set_label_top(self, top):
         self._label_top = top
 
-    @property
-    def font_properties(self):
+    label_top = property(get_label_top, set_label_top)
+
+    def get_font_properties(self):
         return self._font_properties
 
-    @font_properties.setter
-    def font_properties(self, props):
+    def set_font_properties(self, props):
         self._font_properties = props
 
+    font_properties = property(get_font_properties, set_font_properties)

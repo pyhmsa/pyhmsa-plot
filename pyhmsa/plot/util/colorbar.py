@@ -269,146 +269,145 @@ class ColorBar(Artist):
         box.patch.set_alpha(box_alpha)
         box.draw(renderer)
 
-    @property
-    def mappable(self):
+    def get_mappable(self):
         return self._mappable
 
-    @mappable.setter
-    def mappable(self, mappable):
+    def set_mappable(self, mappable):
         self._mappable = mappable
 
-    @property
-    def label(self):
+    mappable = property(get_mappable, set_mappable)
+
+    def get_label(self):
         return self._label
 
-    @label.setter
-    def label(self, label):
+    def set_label(self, label):
         self._label = label
 
-    @property
-    def orientation(self):
+    label = property(get_label, set_label)
+
+    def get_orientation(self):
         return self._orientation
 
-    @orientation.setter
-    def orientation(self, orientation):
+    def set_orientation(self, orientation):
         if orientation is not None and \
                 orientation not in ['vertical', 'horizontal']:
             raise ValueError('Unknown orientation: %s' % orientation)
         self._orientation = orientation
 
-    @property
-    def nbins(self):
+    orientation = property(get_orientation, set_orientation)
+
+    def get_nbins(self):
         return self._nbins
 
-    @nbins.setter
-    def nbins(self, nbins):
+    def set_nbins(self, nbins):
         if nbins is not None:
             nbins = int(nbins)
             if nbins <= 0:
                 raise ValueError('Number of bins must be greater than 0')
         self._nbins = nbins
 
-    @property
-    def length_fraction(self):
+    nbins = property(get_nbins, set_nbins)
+
+    def get_length_fraction(self):
         return self._length_fraction
 
-    @length_fraction.setter
-    def length_fraction(self, fraction):
+    def set_length_fraction(self, fraction):
         if fraction is not None:
             fraction = float(fraction)
             if fraction < 0.0 or fraction > 1.0:
                 raise ValueError('Length fraction must be between [0.0, 1.0]')
         self._length_fraction = fraction
 
-    @property
-    def width_fraction(self):
+    length_fraction = property(get_length_fraction, set_length_fraction)
+
+    def get_width_fraction(self):
         return self._width_fraction
 
-    @width_fraction.setter
-    def width_fraction(self, fraction):
+    def set_width_fraction(self, fraction):
         if fraction is not None:
             fraction = float(fraction)
             if fraction < 0.0 or fraction > 1.0:
                 raise ValueError('Width fraction must be between [0.0, 1.0]')
         self._width_fraction = fraction
 
-    @property
-    def location(self):
+    width_fraction = property(get_width_fraction, set_width_fraction)
+
+    def get_location(self):
         return self._location
 
-    @location.setter
-    def location(self, loc):
+    def set_location(self, loc):
         if is_string_like(loc):
             if loc not in self._LOCATIONS:
                 raise ValueError('Unknown location code: %s' % loc)
             loc = self._LOCATIONS[loc]
         self._location = loc
 
-    @property
-    def pad(self):
+    location = property(get_location, set_location)
+
+    def get_pad(self):
         return self._pad
 
-    @pad.setter
-    def pad(self, pad):
+    def set_pad(self, pad):
         self._pad = pad
 
-    @property
-    def border_pad(self):
+    pad = property(get_pad, set_pad)
+
+    def get_border_pad(self):
         return self._border_pad
 
-    @border_pad.setter
-    def border_pad(self, pad):
+    def set_border_pad(self, pad):
         self._border_pad = pad
 
-    @property
-    def sep(self):
+    border_pad = property(get_border_pad, set_border_pad)
+
+    def get_sep(self):
         return self._sep
 
-    @sep.setter
-    def sep(self, sep):
+    def set_sep(self, sep):
         self._sep = sep
 
-    @property
-    def frameon(self):
+    sep = property(get_sep, set_sep)
+
+    def get_frameon(self):
         return self._frameon
 
-    @frameon.setter
-    def frameon(self, on):
+    def set_frameon(self, on):
         self._frameon = on
 
-    @property
-    def color(self):
+    frameon = property(get_frameon, set_frameon)
+
+    def get_color(self):
         return self._color
 
-    @color.setter
-    def color(self, color):
+    def set_color(self, color):
         self._color = color
 
-    @property
-    def box_color(self):
+    color = property(get_color, set_color)
+
+    def get_box_color(self):
         return self._box_color
 
-    @box_color.setter
-    def box_color(self, color):
+    def set_box_color(self, color):
         self._box_color = color
 
-    @property
-    def box_alpha(self):
+    box_color = property(get_box_color, set_box_color)
+
+    def get_box_alpha(self):
         return self._box_alpha
 
-    @box_alpha.setter
-    def box_alpha(self, alpha):
+    def set_box_alpha(self, alpha):
         if alpha is not None:
             alpha = float(alpha)
             if alpha < 0.0 or alpha > 1.0:
                 raise ValueError('Alpha must be between [0.0, 1.0]')
         self._box_alpha = alpha
 
-    @property
-    def font_properties(self):
+    box_alpha = property(get_box_alpha, set_box_alpha)
+
+    def get_font_properties(self):
         return self._font_properties
 
-    @font_properties.setter
-    def font_properties(self, props):
+    def set_font_properties(self, props):
         self._font_properties = props
 
+    font_properties = property(get_font_properties, set_font_properties)
