@@ -3,6 +3,7 @@
 # Standard library modules.
 import os
 import abc
+from operator import attrgetter
 
 # Third party modules.
 
@@ -13,47 +14,59 @@ import matplotlib.backend_bases
 
 class _DatumPlot(object, metaclass=abc.ABCMeta):
 
-    def __init__(self, datum=None):
-        self._figure = None
-        self._figure_artists = set()
-        self.datum = datum
+    def __init__(self):
+        self._figure = self._create_figure()
+        self._cached_artists = set()
+        self._datum = None
 
     @abc.abstractmethod
-    def _create_figure(self, datum):
+    def _create_figure(self):
         """
-        Creates a figure plotting the specified datum.
+        Creates a figure containing no datum, but ready to be drawn.
         
         :return: :class:`matplotlib.figure.Figure` 
-            and a list of the created :class:`matplotlib._axes.Axes`
         """
         raise NotImplementedError
 
-    def _reset_figure(self):
-        self._figure = None
+    @abc.abstractmethod
+    def _draw_datum(self, figure, datum):
+        """
+        Draws datum in figure.
+        """
+        raise NotImplementedError
 
-    def has_figure(self):
-        return self._figure is not None
+    def _apply_to_axes(self, methodname, *args, **kwargs):
+        outs = []
+        excs = []
 
-    def add_figure_artist(self, artist):
-        self._figure_artists.add(artist)
+        for ax in self._figure.axes:
+            method = attrgetter(methodname)(ax)
+            try:
+                out = method(*args, **kwargs)
+                outs.append(out)
+            except Exception as ex:
+                excs.append(ex)
 
-    def remove_figure_artist(self, artist):
-        self._figure_artists.discard(artist)
+        if excs:
+            raise Exception(', '.join(map(str, excs)))
 
-    def clear_figure_artists(self):
-        self._figure_artists.clear()
+        return outs
+
+    def add_artist(self, artist):
+        self._apply_to_axes('add_artist', artist)
+        self._cached_artists.add(artist)
+
+    def remove_artist(self, artist):
+        try:
+            self._apply_to_axes('artists.remove', artist)
+        except:
+            pass
+        self._cached_artists.discard(artist)
 
     def get_figure(self):
-        if self._datum is None:
-            raise RuntimeError('No datum is specified')
-
-        if not self.has_figure():
-            self._figure, axes = self._create_figure(self._datum)
-            for ax in axes:
-                for artist in self._figure_artists:
-                    ax.add_artist(artist)
-
         return self._figure
+
+    figure = property(get_figure)
 
     def save(self, filepath, canvas_class=None, *args, **kwargs):
         if canvas_class is None:
@@ -68,7 +81,19 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
         return self._datum
 
     def set_datum(self, datum):
-        self._reset_figure()
+        if datum is self._datum:
+            return
+
+        self._figure.clear()
+
+        if datum is None:
+            return
+
+        self._draw_datum(self._figure, datum)
+
+        for artist in self._cached_artists:
+            self._apply_to_axes('add_artist', artist)
+
         self._datum = datum
 
     datum = property(get_datum, set_datum)

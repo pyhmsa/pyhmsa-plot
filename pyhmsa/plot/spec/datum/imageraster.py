@@ -19,34 +19,31 @@ from pyhmsa.plot.util.colorbar import ColorBar
 
 class ImageRaster2DPlot(_DatumPlot):
 
-    def __init__(self, datum=None):
-        _DatumPlot.__init__(self, datum=datum)
+    def __init__(self):
+        _DatumPlot.__init__(self)
 
-        # Properties
         self._cmap = None
 
-        # Create color bar
         self._colorbar = ColorBar()
-        self.add_figure_artist(self._colorbar)
+        self.add_artist(self._colorbar)
 
-        # Create scale bar
         self._scalebar = ScaleBar(0)
-        self.add_figure_artist(self._scalebar)
+        self.add_artist(self._scalebar)
 
-    def _create_figure(self, datum):
+    def _create_figure(self):
+        return Figure()
+
+    def _draw_datum(self, figure, datum):
         acqs = datum.conditions.findvalues(AcquisitionRasterXY)
         acq = next(iter(acqs)) if acqs else None
 
-        # Create figure
-        fig = Figure()
-
         # Re-adjust height
         width, height = datum.shape
-        fig.set_figheight(fig.get_figwidth() * height / width)
+        figure.set_figheight(figure.get_figwidth() * height / width)
 
         # Create axes
-        ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
-        fig.subplots_adjust(0, 0, 1.0, 1.0)
+        ax = figure.add_axes([0.0, 0.0, 1.0, 1.0])
+        figure.subplots_adjust(0, 0, 1.0, 1.0)
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
 #        self._ax = fig.add_subplot("111")
@@ -91,7 +88,7 @@ class ImageRaster2DPlot(_DatumPlot):
 
         self._colorbar.set_mappable(aximage)
 
-        return fig, [ax]
+        return [ax]
 
     @property
     def cmap(self):
