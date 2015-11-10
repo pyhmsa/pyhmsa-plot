@@ -19,22 +19,36 @@ from pyhmsa.plot.util.colorbar import ColorBar
 
 class ImageRaster2DPlot(_DatumPlot):
 
-    def _create_figure(self, datum, *args, **kwargs):
+    def __init__(self, datum=None):
+        _DatumPlot.__init__(self, datum=datum)
+
+        # Properties
+        self._cmap = None
+
+        # Create color bar
+        self._colorbar = ColorBar()
+        self.add_figure_artist(self._colorbar)
+
+        # Create scale bar
+        self._scalebar = ScaleBar(0)
+        self.add_figure_artist(self._scalebar)
+
+    def _create_figure(self, datum):
         acqs = datum.conditions.findvalues(AcquisitionRasterXY)
         acq = next(iter(acqs)) if acqs else None
 
         # Create figure
-        fig = Figure(*args, **kwargs)
+        fig = Figure()
 
         # Re-adjust height
         width, height = datum.shape
         fig.set_figheight(fig.get_figwidth() * height / width)
 
         # Create axes
-        self._ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
+        ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
         fig.subplots_adjust(0, 0, 1.0, 1.0)
-        self._ax.xaxis.set_visible(False)
-        self._ax.yaxis.set_visible(False)
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
 #        self._ax = fig.add_subplot("111")
 
         # Plot datum
@@ -61,45 +75,41 @@ class ImageRaster2DPlot(_DatumPlot):
         except:
             datum = np.flipud(datum.T)
 
-            if acq.step_size_x is not None and acq.step_size_y is not None:
+            if acq and acq.step_size_x is not None and acq.step_size_y is not None:
                 dx_m = convert_unit('m', acq.step_size_x)
                 dy_m = convert_unit('m', acq.step_size_y)
                 extent = [0.0, dx_m * width, 0.0, dy_m * height]
 
-        self._aximage = self._ax.imshow(datum, extent=extent,
-                                        interpolation='none')
+        aximage = ax.imshow(datum, cmap=self._cmap, extent=extent,
+                            interpolation='none')
 
-        self._scalebar = None
-        if acq:
-            self._scalebar = self._create_scalebar(acq)
-            self._ax.add_artist(self._scalebar)
+        if not acq:
+            self._scalebar.set_visible(False)
+            self._scalebar.set_dx_m(0)
+        else:
+            self._scalebar.set_dx_m(1)
 
-        self._colorbar = self._create_colorbar(fig, self._ax, self._aximage)
-        self._ax.add_artist(self._colorbar)
+        self._colorbar.set_mappable(aximage)
 
-        return fig
-
-    def _create_colorbar(self, fig, ax, aximage):
-        return ColorBar(aximage)
-
-    def _create_scalebar(self, acq):
-        return ScaleBar(1) # 1 because already calibrated by extent
-
-    def add_artist(self, artist):
-        self._ax.add_artist(artist)
+        return fig, [ax]
 
     @property
     def cmap(self):
-        return self._aximage.get_cmap()
+        mappable = self._colorbar.get_mappable()
+        if mappable:
+            return mappable.get_cmap()
+        return self._cmap
 
     @cmap.setter
     def cmap(self, cmap):
-        self._aximage.set_cmap(cmap)
+        mappable = self._colorbar.get_mappable()
+        if mappable:
+            mappable.set_cmap(cmap)
+        else:
+            self._cmap = cmap
 
     @property
     def scalebar(self):
-        if self._scalebar is None:
-            raise RuntimeError('No scale bar')
         return self._scalebar
 
     @property
