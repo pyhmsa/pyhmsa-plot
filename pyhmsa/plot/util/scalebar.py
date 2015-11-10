@@ -109,7 +109,8 @@ class ScaleBar(Artist):
         self.font_properties = FontProperties(font_properties)
 
     def _calculate_length(self, length_px):
-        length_m = length_px * self._dx_m
+        dx_m = self.dx_m
+        length_m = length_px * dx_m
 
         prefixes_values = _PREFIXES_VALUES.copy()
         prefixes_values[''] = 1.0
@@ -123,13 +124,15 @@ class ScaleBar(Artist):
         index = bisect.bisect_left(self._PREFERRED_VALUES, length_unit)
         length_unit = self._PREFERRED_VALUES[index - 1]
 
-        length_px = length_unit * factor / self._dx_m
+        length_px = length_unit * factor / dx_m
         label = '%i %sm' % (length_unit, unit)
 
         return length_px, label
 
     def draw(self, renderer, *args, **kwargs):
         if not self.get_visible():
+            return
+        if self.dx_m == 0:
             return
 
         # Get parameters
