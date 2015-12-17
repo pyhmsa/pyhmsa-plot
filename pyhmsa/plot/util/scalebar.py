@@ -19,7 +19,10 @@ from matplotlib.rcsetup import \
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredSizeBar
 
 # Local modules.
-from pyhmsa.type.unit import _PREFIXES_VALUES
+_PREFIXES_VALUES = {'Y': 1e24, 'Z': 1e21, 'E': 1e18, 'P': 1e15, 'T': 1e12,
+                    'G': 1e9, 'M': 1e6, 'k': 1e3, 'm': 1e-3, u'\u00b5': 1e-6,
+                    'u': 1e-6, 'n': 1e-9, 'p': 1e-12, 'f': 1e-15, 'a': 1e-18,
+                    'z': 1e-21, 'y': 1e-24}
 
 # Globals and constants variables.
 
