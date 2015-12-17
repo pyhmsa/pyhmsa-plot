@@ -4,8 +4,6 @@ Add color bar to matplotlib's image
 
 # Standard library modules.
 import sys
-import bisect
-from operator import itemgetter
 import imp
 
 # Third party modules.
@@ -24,7 +22,6 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 
 # Local modules.
-from pyhmsa.type.unit import _PREFIXES_VALUES
 
 # Globals and constants variables.
 
@@ -126,26 +123,6 @@ class ColorBar(Artist):
         self.box_alpha = box_alpha
         self.font_properties = FontProperties(font_properties)
 
-    def _calculate_length(self, length_px):
-        length_m = length_px * self._dx_m
-
-        prefixes_values = _PREFIXES_VALUES.copy()
-        prefixes_values[''] = 1.0
-        prefixes_values.pop('u')
-        prefixes_values = sorted(prefixes_values.items(), key=itemgetter(1))
-        values = [prefix_value[1] for prefix_value in prefixes_values]
-        index = bisect.bisect_left(values, length_m)
-        unit, factor = prefixes_values[index - 1]
-
-        length_unit = length_m / factor
-        index = bisect.bisect_left(self._PREFERRED_VALUES, length_unit)
-        length_unit = self._PREFERRED_VALUES[index - 1]
-
-        length_px = length_unit * factor / self._dx_m
-        label = '%i %sm' % (length_unit, unit)
-
-        return length_px, label
-
     def draw(self, renderer, *args, **kwargs):
         if not self.get_visible():
             return
@@ -200,7 +177,7 @@ class ColorBar(Artist):
                 patch = Rectangle((0, x), width, step_length)
             patches.append(patch)
 
-        _, values = np.histogram(array, nbins)
+        values = np.linspace(np.min(array), np.max(array), nbins)
 
         col = PatchCollection(patches, cmap=cmap,
                               edgecolors='none')
