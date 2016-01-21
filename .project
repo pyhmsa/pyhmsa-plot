@@ -3,6 +3,8 @@
 	<name>pyhmsa-plot</name>
 	<comment></comment>
 	<projects>
+		<project>matplotlib-colorbar</project>
+		<project>matplotlib-scalebar</project>
 		<project>pyhmsa</project>
 	</projects>
 	<buildSpec>

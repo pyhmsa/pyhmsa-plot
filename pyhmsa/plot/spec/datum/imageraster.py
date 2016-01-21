@@ -5,6 +5,9 @@
 # Third party modules.
 from matplotlib.figure import Figure
 
+from matplotlib_colorbar.colorbar import ColorBar
+from matplotlib_scalebar.scalebar import ScaleBar
+
 import numpy as np
 
 from pyhmsa.spec.condition.acquisition import AcquisitionRasterXY
@@ -12,8 +15,6 @@ from pyhmsa.type.numerical import convert_unit
 
 # Local modules.
 from pyhmsa.plot.spec.datum.datum import _DatumPlot
-from pyhmsa.plot.util.scalebar import ScaleBar
-from pyhmsa.plot.util.colorbar import ColorBar
 
 # Globals and constants variables.
 
