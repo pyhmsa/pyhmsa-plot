@@ -1,0 +1,2 @@
+include versioneer.py
+include pyhmsa_plot/_version.py

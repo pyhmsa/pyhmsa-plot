@@ -7,19 +7,17 @@ import os
 from setuptools import setup, find_packages
 
 # Local modules.
+import versioneer
 
 # Globals and constants variables.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(BASEDIR, 'VERSION')) as version_file:
-    version = version_file.read().strip()
-
 # Get the long description from the relevant file
-with open('README.rst', 'r') as f:
+with open(os.path.join(BASEDIR, 'README.rst'), 'r') as f:
     long_description = f.read()
 
 setup(name='pyHMSA-plot',
-      version=version,
+      version=versioneer.get_version(),
       description='Plot data from HMSA specification',
       long_description=long_description,
 
@@ -54,5 +52,7 @@ setup(name='pyHMSA-plot',
       zip_safe=True,
 
       entry_points={},
+
+      cmdclass=versioneer.get_cmdclass(),
 
      )
