@@ -14,7 +14,7 @@ from pyhmsa.spec.condition.acquisition import AcquisitionRasterXY
 from pyhmsa.type.numerical import convert_unit
 
 # Local modules.
-from pyhmsa.plot.spec.datum.datum import _DatumPlot
+from pyhmsa_plot.spec.datum.datum import _DatumPlot
 
 # Globals and constants variables.
 
