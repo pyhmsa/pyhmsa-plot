@@ -63,6 +63,10 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
             pass
         self._cached_artists.discard(artist)
 
+    def clear(self):
+        self._cached_artists.clear()
+        self.set_datum(self.get_datum(), force=True)
+
     def get_figure(self):
         return self._figure
 
@@ -80,8 +84,8 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
     def get_datum(self):
         return self._datum
 
-    def set_datum(self, datum):
-        if datum is self._datum:
+    def set_datum(self, datum, force=False):
+        if datum is self._datum and not force:
             return
 
         self._figure.clear()
