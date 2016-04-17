@@ -5,7 +5,7 @@
 # Third party modules.
 from matplotlib.figure import Figure
 
-from matplotlib_colorbar.colorbar import ColorBar
+from matplotlib_colorbar.colorbar import Colorbar
 from matplotlib_scalebar.scalebar import ScaleBar
 
 import numpy as np
@@ -24,8 +24,10 @@ class ImageRaster2DPlot(_DatumPlot):
         _DatumPlot.__init__(self)
 
         self._cmap = None
+        self.vmin = None
+        self.vmax = None
 
-        self._colorbar = ColorBar()
+        self._colorbar = Colorbar()
         self.add_artist(self._colorbar)
 
         self._scalebar = ScaleBar(0)
@@ -79,7 +81,8 @@ class ImageRaster2DPlot(_DatumPlot):
                 extent = [0.0, dx_m * width, 0.0, dy_m * height]
 
         aximage = ax.imshow(datum, cmap=self._cmap, extent=extent,
-                            interpolation='none')
+                            interpolation='none',
+                            vmin=self.vmin, vmax=self.vmax)
 
         if not acq:
             self._scalebar.set_visible(False)
@@ -113,4 +116,21 @@ class ImageRaster2DPlot(_DatumPlot):
     @property
     def colorbar(self):
         return self._colorbar
+
+    @property
+    def vmin(self):
+        return self._vmin
+
+    @vmin.setter
+    def vmin(self, value):
+        self._vmin = value
+
+    @property
+    def vmax(self):
+        return self._vmax
+
+    @vmax.setter
+    def vmax(self, value):
+        self._vmax = value
+        self.draw()
 

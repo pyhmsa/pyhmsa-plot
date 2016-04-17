@@ -63,14 +63,26 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
             pass
         self._cached_artists.discard(artist)
 
+    def draw(self):
+        for artist in self._cached_artists:
+            try:
+                artist.remove()
+            except NotImplementedError:
+                pass
+        self._figure.clear()
+
+        datum = self._datum
+        if datum is None:
+            return
+
+        self._draw_datum(self._figure, datum)
+
+        for artist in self._cached_artists:
+            self._apply_to_axes('add_artist', artist)
+
     def clear(self):
         self._cached_artists.clear()
-        self.set_datum(self.get_datum(), force=True)
-
-    def get_figure(self):
-        return self._figure
-
-    figure = property(get_figure)
+        self.draw()
 
     def save(self, filepath, canvas_class=None, *args, **kwargs):
         if canvas_class is None:
@@ -81,23 +93,18 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
         canvas_class(figure)
         figure.savefig(filepath, *args, **kwargs)
 
+    def get_figure(self):
+        return self._figure
+
+    figure = property(get_figure)
+
     def get_datum(self):
         return self._datum
 
-    def set_datum(self, datum, force=False):
-        if datum is self._datum and not force:
+    def set_datum(self, datum):
+        if datum is self._datum:
             return
-
-        self._figure.clear()
-
-        if datum is None:
-            return
-
-        self._draw_datum(self._figure, datum)
-
-        for artist in self._cached_artists:
-            self._apply_to_axes('add_artist', artist)
-
         self._datum = datum
+        self.draw()
 
     datum = property(get_datum, set_datum)
