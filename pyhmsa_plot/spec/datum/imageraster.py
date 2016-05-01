@@ -3,8 +3,6 @@
 # Standard library modules.
 
 # Third party modules.
-from matplotlib.figure import Figure
-
 from matplotlib_colorbar.colorbar import Colorbar
 from matplotlib_scalebar.scalebar import ScaleBar
 
@@ -15,52 +13,51 @@ from pyhmsa.type.numerical import convert_unit
 
 # Local modules.
 from pyhmsa_plot.spec.datum.datum import _DatumPlot
+from pyhmsa_plot.util.modest_image import imshow
 
 # Globals and constants variables.
 
 class ImageRaster2DPlot(_DatumPlot):
 
     def __init__(self):
-        _DatumPlot.__init__(self)
+        super().__init__()
 
-        self._cmap = None
+        self.cmap = None
         self.vmin = None
         self.vmax = None
+        self.unit = 'm'
+        self._colorbar_kwargs = None
+        self._scalebar_kwargs = None
 
-        self._colorbar = Colorbar()
-        self.add_artist(self._colorbar)
+    def _create_axes(self, fig, datum):
+        return fig.add_axes([0.0, 0.0, 1.0, 1.0])
 
-        self._scalebar = ScaleBar(0)
-        self.add_artist(self._scalebar)
+    def _create_figure(self, datum):
+        fig, ax = _DatumPlot._create_figure(self, datum)
 
-    def _create_figure(self):
-        return Figure()
+        width, height = datum.shape
+        fig.set_figheight(fig.get_figwidth() * height / width)
 
-    def _draw_datum(self, figure, datum):
+        return fig, ax
+
+    def _plot(self, datum, ax):
         acqs = datum.conditions.findvalues(AcquisitionRasterXY)
         acq = next(iter(acqs)) if acqs else None
 
-        # Re-adjust height
-        width, height = datum.shape
-        figure.set_figheight(figure.get_figwidth() * height / width)
-
-        # Create axes
-        ax = figure.add_axes([0.0, 0.0, 1.0, 1.0])
-        figure.subplots_adjust(0, 0, 1.0, 1.0)
+        # Setup axes
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
-#        self._ax = fig.add_subplot("111")
 
         # Plot datum
-        extent = None
+        unit = self.unit
         try:
             p0 = datum.get_position(0, 0)
             p1 = datum.get_position(-1, -1)
 
-            p0x = float(convert_unit('m', p0.x))
-            p0y = float(convert_unit('m', p0.y))
-            p1x = float(convert_unit('m', p1.x))
-            p1y = float(convert_unit('m', p1.y))
+            p0x = float(convert_unit(unit, p0.x))
+            p0y = float(convert_unit(unit, p0.y))
+            p1x = float(convert_unit(unit, p1.x))
+            p1y = float(convert_unit(unit, p1.y))
 
             datum = np.flipud(datum.T)
             if p0x > p1x:
@@ -73,64 +70,26 @@ class ImageRaster2DPlot(_DatumPlot):
             extent = [p0x, p1x, p0y, p1y]
 
         except:
-            datum = np.flipud(datum.T)
+            extent = None
 
-            if acq and acq.step_size_x is not None and acq.step_size_y is not None:
-                dx_m = convert_unit('m', acq.step_size_x)
-                dy_m = convert_unit('m', acq.step_size_y)
-                extent = [0.0, dx_m * width, 0.0, dy_m * height]
+        aximage = imshow(ax, datum, cmap=self.cmap, extent=extent,
+                         interpolation='none',
+                         vmin=self.vmin, vmax=self.vmax)
 
-        aximage = ax.imshow(datum, cmap=self._cmap, extent=extent,
-                            interpolation='none',
-                            vmin=self.vmin, vmax=self.vmax)
+        if acq and self._scalebar_kwargs is not None:
+            scalebar = ScaleBar(1, **self._scalebar_kwargs)
+            ax.add_artist(scalebar)
 
-        if not acq:
-            self._scalebar.set_visible(False)
-            self._scalebar.set_dx_m(0)
-        else:
-            self._scalebar.set_dx_m(1)
+        if self._colorbar_kwargs is not None:
+            colorbar = Colorbar(aximage, **self._colorbar_kwargs)
+            ax.add_artist(colorbar)
 
-        self._colorbar.set_mappable(aximage)
+    def add_colorbar(self, **kwargs):
+        if self._colorbar_kwargs is not None:
+            raise ValueError('Colorbar already defined')
+        self._colorbar_kwargs = kwargs
 
-        return [ax]
-
-    @property
-    def cmap(self):
-        mappable = self._colorbar.get_mappable()
-        if mappable:
-            return mappable.get_cmap()
-        return self._cmap
-
-    @cmap.setter
-    def cmap(self, cmap):
-        mappable = self._colorbar.get_mappable()
-        if mappable:
-            mappable.set_cmap(cmap)
-        else:
-            self._cmap = cmap
-
-    @property
-    def scalebar(self):
-        return self._scalebar
-
-    @property
-    def colorbar(self):
-        return self._colorbar
-
-    @property
-    def vmin(self):
-        return self._vmin
-
-    @vmin.setter
-    def vmin(self, value):
-        self._vmin = value
-
-    @property
-    def vmax(self):
-        return self._vmax
-
-    @vmax.setter
-    def vmax(self, value):
-        self._vmax = value
-        self.draw()
-
+    def add_scalebar(self, **kwargs):
+        if self._scalebar_kwargs is not None:
+            raise ValueError('Scalebar already defined')
+        self._scalebar_kwargs = kwargs

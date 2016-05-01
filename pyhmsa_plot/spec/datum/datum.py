@@ -3,108 +3,66 @@
 # Standard library modules.
 import os
 import abc
-from operator import attrgetter
 
 # Third party modules.
 
 # Local modules.
 import matplotlib.backend_bases
+from matplotlib.figure import Figure
 
 # Globals and constants variables.
 
 class _DatumPlot(object, metaclass=abc.ABCMeta):
 
-    def __init__(self):
-        self._figure = self._create_figure()
-        self._cached_artists = set()
-        self._datum = None
+    def _create_axes(self, fig, datum):
+        return fig.add_subplot("111")
+
+    def _create_figure(self, datum):
+        fig = Figure()
+        ax = self._create_axes(fig, datum)
+        return fig, ax
 
     @abc.abstractmethod
-    def _create_figure(self):
+    def _plot(self, datum, ax):
         """
-        Creates a figure containing no datum, but ready to be drawn.
+        Performs the actual plotting of *datum* in *ax*.
+        """
+        raise NotImplementedError
+
+    def plot(self, datum, ax=None):
+        """
+        Plots the datum in a matplotlib :class:`Axes <matplotlib.axes.Axes>`.
+        If no *ax* is specified a figure and axes is created.
         
-        :return: :class:`matplotlib.figure.Figure` 
+        :arg datum: datum object 
+        :type datum: :class:`pyhmsa.spec.datum.datum._Datum`
+        
+        :arg ax: matplotlib's Axes (optional)
+        :type ax: class:`Axes <matplotlib.axes.Axes>`
+        
+        :return: matplotlib's Figure
+        :rtype: :class:`matplotlib.figure.Figure`
         """
-        raise NotImplementedError
+        if ax is None:
+            fig, ax = self._create_figure(datum)
+        else:
+            fig = ax.get_figure()
 
-    @abc.abstractmethod
-    def _draw_datum(self, figure, datum):
+        ax.clear()
+        self._plot(datum, ax)
+
+        return fig
+
+    def save(self, filepath, datum, ax=None, canvas_class=None, *args, **kwargs):
         """
-        Draws datum in figure.
+        Plots and saves the *datum* to the specified *filepath*.
         """
-        raise NotImplementedError
+        fig = self.plot(datum, ax)
 
-    def _apply_to_axes(self, methodname, *args, **kwargs):
-        outs = []
-        excs = []
-
-        for ax in self._figure.axes:
-            method = attrgetter(methodname)(ax)
-            try:
-                out = method(*args, **kwargs)
-                outs.append(out)
-            except Exception as ex:
-                excs.append(ex)
-
-        if excs:
-            raise Exception(', '.join(map(str, excs)))
-
-        return outs
-
-    def add_artist(self, artist):
-        self._apply_to_axes('add_artist', artist)
-        self._cached_artists.add(artist)
-
-    def remove_artist(self, artist):
-        try:
-            self._apply_to_axes('artists.remove', artist)
-        except:
-            pass
-        self._cached_artists.discard(artist)
-
-    def draw(self):
-        for artist in self._cached_artists:
-            try:
-                artist.remove()
-            except NotImplementedError:
-                pass
-        self._figure.clear()
-
-        datum = self._datum
-        if datum is None:
-            return
-
-        self._draw_datum(self._figure, datum)
-
-        for artist in self._cached_artists:
-            self._apply_to_axes('add_artist', artist)
-
-    def clear(self):
-        self._cached_artists.clear()
-        self.draw()
-
-    def save(self, filepath, canvas_class=None, *args, **kwargs):
         if canvas_class is None:
             ext = os.path.splitext(filepath)[1][1:]
             canvas_class = matplotlib.backend_bases.get_registered_canvas_class(ext)
 
-        figure = self.get_figure()
-        canvas_class(figure)
-        figure.savefig(filepath, *args, **kwargs)
+        canvas_class(fig)
+        fig.savefig(filepath, *args, **kwargs)
 
-    def get_figure(self):
-        return self._figure
-
-    figure = property(get_figure)
-
-    def get_datum(self):
-        return self._datum
-
-    def set_datum(self, datum):
-        if datum is self._datum:
-            return
-        self._datum = datum
-        self.draw()
-
-    datum = property(get_datum, set_datum)
