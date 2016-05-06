@@ -66,3 +66,7 @@ class _DatumPlot(object, metaclass=abc.ABCMeta):
         canvas_class(fig)
         fig.savefig(filepath, *args, **kwargs)
 
+        if ax is None:
+            del fig
+            del canvas_class
+
