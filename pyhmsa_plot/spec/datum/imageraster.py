@@ -8,7 +8,8 @@ from matplotlib_scalebar.scalebar import ScaleBar
 
 import numpy as np
 
-from pyhmsa.spec.condition.acquisition import AcquisitionRasterXY
+import scipy.ndimage as ndimage
+
 from pyhmsa.type.numerical import convert_unit
 
 # Local modules.
@@ -28,6 +29,7 @@ class ImageRaster2DPlot(_DatumPlot):
         self.unit = 'm'
         self._colorbar_kwargs = None
         self._scalebar_kwargs = None
+        self._median_filter_kwargs = None
 
     def _create_axes(self, fig, datum):
         return fig.add_axes([0.0, 0.0, 1.0, 1.0])
@@ -41,14 +43,22 @@ class ImageRaster2DPlot(_DatumPlot):
         return fig, ax
 
     def _plot(self, datum, ax):
-        acqs = datum.conditions.findvalues(AcquisitionRasterXY)
-        acq = next(iter(acqs)) if acqs else None
-
         # Setup axes
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
 
-        # Plot datum
+        # Plot
+        datum, extent = self._calculate_extent(datum)
+        datum = self._apply_median(datum)
+
+        aximage = imshow(ax, datum, cmap=self.cmap, extent=extent,
+                         interpolation='none',
+                         vmin=self.vmin, vmax=self.vmax)
+
+        self._apply_scalebar(datum, ax, extent)
+        self._apply_colorbar(datum, ax, aximage)
+
+    def _calculate_extent(self, datum):
         unit = self.unit
         try:
             p0 = datum.get_position(0, 0)
@@ -67,29 +77,71 @@ class ImageRaster2DPlot(_DatumPlot):
                 datum = np.flipud(datum)
                 p0y, p1y = p1y, p0y
 
-            extent = [p0x, p1x, p0y, p1y]
+            return datum, [p0x, p1x, p0y, p1y]
 
         except:
-            extent = None
+            pass
 
-        aximage = imshow(ax, datum, cmap=self.cmap, extent=extent,
-                         interpolation='none',
-                         vmin=self.vmin, vmax=self.vmax)
-
-        if acq and self._scalebar_kwargs is not None:
-            scalebar = ScaleBar(1, **self._scalebar_kwargs)
-            ax.add_artist(scalebar)
-
-        if self._colorbar_kwargs is not None:
-            colorbar = Colorbar(aximage, **self._colorbar_kwargs)
-            ax.add_artist(colorbar)
+        return datum, None
 
     def add_colorbar(self, **kwargs):
         if self._colorbar_kwargs is not None:
             raise ValueError('Colorbar already defined')
         self._colorbar_kwargs = kwargs
 
+    def remove_colorbar(self):
+        self._colorbar_kwargs = None
+
+    def has_colorbar(self):
+        return self._colorbar_kwargs is not None
+
+    def get_colorbar_kwargs(self):
+        if not self.has_colorbar():
+            return {}
+        return self._colorbar_kwargs.copy()
+
+    def _apply_colorbar(self, datum, ax, aximage):
+        if not self.has_colorbar():
+            return
+        colorbar = Colorbar(aximage, **self._colorbar_kwargs)
+        ax.add_artist(colorbar)
+
     def add_scalebar(self, **kwargs):
         if self._scalebar_kwargs is not None:
             raise ValueError('Scalebar already defined')
         self._scalebar_kwargs = kwargs
+
+    def remove_scalebar(self):
+        self._scalebar_kwargs = None
+
+    def has_scalebar(self):
+        return self._scalebar_kwargs is not None
+
+    def get_scalebar_kwargs(self):
+        if not self.has_scalebar():
+            return {}
+        return self._scalebar_kwargs.copy()
+
+    def _apply_scalebar(self, datum, ax, extent):
+        if not self.has_scalebar():
+            return
+        if extent is None:
+            return
+        scalebar = ScaleBar(1, **self._scalebar_kwargs)
+        ax.add_artist(scalebar)
+
+    def add_median_filter(self, size=3):
+        if self.has_median_filter():
+            raise ValueError('Median filter already defined')
+        self._median_filter_kwargs = {'size': size}
+
+    def remove_median_filter(self):
+        self._median_filter_kwargs = None
+
+    def has_median_filter(self):
+        return self._median_filter_kwargs is not None
+
+    def _apply_median(self, datum):
+        if not self.has_median_filter():
+            return datum
+        return ndimage.median_filter(datum, **self._median_filter_kwargs)
