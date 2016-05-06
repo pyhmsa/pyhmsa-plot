@@ -47,7 +47,7 @@ setup(name='pyHMSA-plot',
       package_data={},
 
       install_requires=['pyHMSA', 'matplotlib', 'matplotlib_colorbar',
-                        'matplotlib_scalebar'],
+                        'matplotlib_scalebar', 'scipy'],
 
       zip_safe=True,
 
