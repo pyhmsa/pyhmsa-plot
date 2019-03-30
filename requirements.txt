@@ -1,0 +1,7 @@
+pyhmsa
+matplotlib
+matplotlib_colorbar
+matplotlib_scalebar
+scipy
+nose
+coverage
