@@ -16,6 +16,14 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(BASEDIR, 'README.rst'), 'r') as f:
     long_description = f.read()
 
+PACKAGES = find_packages()
+
+CMDCLASS = versioneer.get_cmdclass()
+
+INSTALL_REQUIRES = ['pyHMSA', 'matplotlib', 'matplotlib_colorbar',
+                    'matplotlib_scalebar', 'scipy']
+EXTRAS_REQUIRE = {'develop': ['nose', 'coverage']}
+
 setup(name='pyHMSA-plot',
       version=versioneer.get_version(),
       description='Plot data from HMSA specification',
@@ -36,23 +44,19 @@ setup(name='pyHMSA-plot',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Topic :: Scientific/Engineering :: Physics',
         ],
 
-      packages=find_packages(),
-      package_data={},
+      packages=PACKAGES,
 
-      install_requires=['pyHMSA', 'matplotlib', 'matplotlib_colorbar',
-                        'matplotlib_scalebar', 'scipy'],
+      install_requires=INSTALL_REQUIRES,
+      extras_require=EXTRAS_REQUIRE,
 
       zip_safe=True,
 
-      entry_points={},
+      test_suite='nose.collector',
 
-      cmdclass=versioneer.get_cmdclass(),
+      cmdclass=CMDCLASS,
 
      )
