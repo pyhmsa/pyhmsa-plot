@@ -15,7 +15,7 @@ class AnalysisList0DPlot(_DatumPlot):
     def _plot(self, datum, ax):
         xs = np.arange(len(datum))
         ys = datum[:, 0]
-        xlabel = 'Analysis'
+        xlabel = datum.get_xlabel()
         ylabel = datum.get_ylabel()
 
         # Draw
