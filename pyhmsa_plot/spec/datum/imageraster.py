@@ -70,6 +70,7 @@ class ImageRaster2DPlot(_DatumPlot):
             p1y = float(convert_unit(unit, p1.y))
 
             datum = np.flipud(datum.T)
+            datum = np.rot90(datum, 2)
             if p0x > p1x:
                 datum = np.fliplr(datum)
                 p0x, p1x = p1x, p0x
